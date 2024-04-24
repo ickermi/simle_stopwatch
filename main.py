@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 from kivy.app import App
 from kivy.uix.button import Button
@@ -11,10 +11,8 @@ from kivy.clock import Clock
 class SingleStopwatch(BoxLayout):
 
     def __init__(self, **kwargs):
-        self.update_interval = kwargs.pop('update_interval', 1)
         super().__init__(**kwargs)
-        print(self.update_interval)
-        self.time = datetime.timedelta(seconds=0)
+        self.start_time = None
         self.timer = None
 
         layout = BoxLayout(orientation='vertical')
@@ -36,16 +34,17 @@ class SingleStopwatch(BoxLayout):
 
         layout.add_widget(buttons_layout)
 
-    def update_time(self, td):
-        self.time += datetime.timedelta(seconds=td)
-        hours = self.time.seconds // 3600
-        minutes = (self.time.seconds % 3600) // 60
-        seconds = self.time.seconds % 60
+    def update_time(self, dt):
+        seconds_passed = int((datetime.now() - self.start_time).total_seconds())
+        hours = seconds_passed // 3600
+        minutes = (seconds_passed % 3600) // 60
+        seconds = seconds_passed % 60
         self.time_label.text = f"{hours:0>2}:{minutes:0>2}:{seconds:0>2}"
 
     def start(self):
         if self.timer is None:
-            self.timer = Clock.schedule_interval(self.update_time, self.update_interval)
+            self.start_time = datetime.now()
+            self.timer = Clock.schedule_interval(self.update_time, 1)
 
     def stop(self):
         if self.timer is not None:
@@ -54,7 +53,7 @@ class SingleStopwatch(BoxLayout):
 
     def reset(self):
         self.stop()
-        self.time = datetime.timedelta(seconds=0)
+        self.start_time = datetime.now()
         self.time_label.text = "00:00:00"
 
     def on_start(self, button):
@@ -72,7 +71,7 @@ class MainScreen(GridLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.cols = 1
-        stopwatch = SingleStopwatch(update_interval=0.1)
+        stopwatch = SingleStopwatch()
         self.add_widget(stopwatch)
 
 
