@@ -35,11 +35,11 @@ class SingleStopwatch(BoxLayout):
         layout.add_widget(buttons_layout)
 
     def update_time(self, dt):
-        seconds_passed = int((datetime.now() - self.start_time).total_seconds())
+        seconds_passed = (datetime.now() - self.start_time).total_seconds()
         hours = seconds_passed // 3600
         minutes = (seconds_passed % 3600) // 60
         seconds = seconds_passed % 60
-        self.time_label.text = f"{hours:0>2}:{minutes:0>2}:{seconds:0>2}"
+        self.time_label.text = f"{hours:0>2.0f}:{minutes:0>2.0f}:{seconds:0>2.0f}"
 
     def start(self):
         if self.timer is None:
