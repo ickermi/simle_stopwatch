@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from kivy.app import App
 from kivy.uix.button import Button
@@ -14,6 +14,7 @@ class SingleStopwatch(BoxLayout):
         super().__init__(**kwargs)
         self.start_time = None
         self.timer = None
+        self.acc_time = timedelta()
 
         layout = BoxLayout(orientation='vertical')
         self.time_label = Label(text='00:00:00')
@@ -35,7 +36,7 @@ class SingleStopwatch(BoxLayout):
         layout.add_widget(buttons_layout)
 
     def update_time(self, dt):
-        seconds_passed = (datetime.now() - self.start_time).total_seconds()
+        seconds_passed = (datetime.now() - self.start_time).total_seconds() + self.acc_time.total_seconds()
         hours = seconds_passed // 3600
         minutes = (seconds_passed % 3600) // 60
         seconds = seconds_passed % 60
@@ -49,11 +50,12 @@ class SingleStopwatch(BoxLayout):
     def stop(self):
         if self.timer is not None:
             self.timer.cancel()
+            self.acc_time = datetime.now() - self.start_time + self.acc_time
             self.timer = None
 
     def reset(self):
         self.stop()
-        self.start_time = datetime.now()
+        self.acc_time = timedelta()
         self.time_label.text = "00:00:00"
 
     def on_start(self, button):
