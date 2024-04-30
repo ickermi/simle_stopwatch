@@ -8,17 +8,48 @@ from kivy.uix.label import Label
 from kivy.clock import Clock
 
 
-class SingleStopwatch(BoxLayout):
+class StopwatchLabel(Label):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.start_time = None
-        self.timer = None
-        self.acc_time = timedelta()
+        self.text = '00:00:00'
+
+        self._start_time = None
+        self._timer = None
+        self._acc_time = timedelta()
+
+    def _update_time(self, dt):
+        seconds_passed = (datetime.now() - self._start_time).total_seconds() + self._acc_time.total_seconds()
+        hours = seconds_passed // 3600
+        minutes = (seconds_passed % 3600) // 60
+        seconds = seconds_passed % 60
+        self.text = f"{hours:0>2.0f}:{minutes:0>2.0f}:{seconds:0>2.0f}"
+
+    def start(self):
+        if self._timer is None:
+            self._start_time = datetime.now()
+            self._timer = Clock.schedule_interval(self._update_time, 1)
+
+    def stop(self):
+        if self._timer is not None:
+            self._timer.cancel()
+            self._acc_time = datetime.now() - self._start_time + self._acc_time
+            self._timer = None
+
+    def reset(self):
+        self.stop()
+        self._acc_time = timedelta()
+        self.text = "00:00:00"
+
+
+class Stopwatch(BoxLayout):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
         layout = BoxLayout(orientation='vertical')
-        self.time_label = Label(text='00:00:00')
-        layout.add_widget(self.time_label)
+        self.time_display = StopwatchLabel()
+        layout.add_widget(self.time_display)
         self.add_widget(layout)
 
         buttons_layout = BoxLayout()
@@ -35,37 +66,14 @@ class SingleStopwatch(BoxLayout):
 
         layout.add_widget(buttons_layout)
 
-    def update_time(self, dt):
-        seconds_passed = (datetime.now() - self.start_time).total_seconds() + self.acc_time.total_seconds()
-        hours = seconds_passed // 3600
-        minutes = (seconds_passed % 3600) // 60
-        seconds = seconds_passed % 60
-        self.time_label.text = f"{hours:0>2.0f}:{minutes:0>2.0f}:{seconds:0>2.0f}"
-
-    def start(self):
-        if self.timer is None:
-            self.start_time = datetime.now()
-            self.timer = Clock.schedule_interval(self.update_time, 1)
-
-    def stop(self):
-        if self.timer is not None:
-            self.timer.cancel()
-            self.acc_time = datetime.now() - self.start_time + self.acc_time
-            self.timer = None
-
-    def reset(self):
-        self.stop()
-        self.acc_time = timedelta()
-        self.time_label.text = "00:00:00"
-
     def on_start(self, button):
-        self.start()
+        self.time_display.start()
 
     def on_stop(self, button):
-        self.stop()
+        self.time_display.stop()
 
     def on_reset(self, button):
-        self.reset()
+        self.time_display.reset()
 
 
 class MainScreen(GridLayout):
@@ -73,7 +81,7 @@ class MainScreen(GridLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.cols = 1
-        stopwatch = SingleStopwatch()
+        stopwatch = Stopwatch()
         self.add_widget(stopwatch)
 
 
